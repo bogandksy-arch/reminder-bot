@@ -35,6 +35,8 @@ from telegram.ext import (
     Application,
     CommandHandler,
     ContextTypes,
+    MessageHandler,
+    filters,
 )
 
 logging.basicConfig(
@@ -152,6 +154,24 @@ def schedule_job(app: Application, chat_id: int, reminder_id: str, text: str, wh
 # ---------------------------------------------------------------------------
 # Обробники команд
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Діагностичне логування (тимчасове) — показує будь-яке отримане повідомлення
+# ---------------------------------------------------------------------------
+
+async def log_any_update(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat = update.effective_chat
+    msg = update.effective_message
+    logger.info(
+        "УВІЙШЛО ПОВІДОМЛЕННЯ: update_id=%s chat_id=%s chat_type=%s chat_title=%s text=%r has_channel_post=%s",
+        update.update_id,
+        chat.id if chat else None,
+        chat.type if chat else None,
+        chat.title if chat else None,
+        msg.text if msg else None,
+        update.channel_post is not None,
+    )
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(
@@ -326,6 +346,7 @@ def main() -> None:
 
     app = Application.builder().token(token).post_init(post_init).build()
 
+    app.add_handler(MessageHandler(filters.ALL, log_any_update), group=-1)
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("remind", remind))
