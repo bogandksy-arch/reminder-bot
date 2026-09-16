@@ -154,7 +154,7 @@ def schedule_job(app: Application, chat_id: int, reminder_id: str, text: str, wh
 # ---------------------------------------------------------------------------
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         "Привіт! Я нагадую про справи.\n\n"
         "Приклади:\n"
         "/remind 10m Купити молоко\n"
@@ -165,7 +165,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         "Формати часу для /remind:\n"
         "  10m           — через 10 хвилин\n"
         "  2h            — через 2 години\n"
@@ -182,7 +182,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not context.args:
-        await update.message.reply_text(
+        await update.effective_message.reply_text(
             "Вкажіть час і текст, наприклад:\n/remind 10m Купити молоко"
         )
         return
@@ -195,7 +195,7 @@ async def remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     when, used_tokens = parse_when(token_time, token_second, now)
 
     if when is None:
-        await update.message.reply_text(
+        await update.effective_message.reply_text(
             "Не вдалося розпізнати час. Приклади: 10m, 2h, 15:30, 25.12 10:00.\n"
             "Введіть /help для повного списку форматів."
         )
@@ -203,7 +203,7 @@ async def remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     text_parts = args[used_tokens:]
     if not text_parts:
-        await update.message.reply_text("Додайте текст нагадування після часу.")
+        await update.effective_message.reply_text("Додайте текст нагадування після часу.")
         return
 
     text = " ".join(text_parts)
@@ -221,7 +221,7 @@ async def remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     schedule_job(context.application, chat_id, reminder_id, text, when)
 
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         f"Готово ✅ Нагадаю {when.strftime('%d.%m.%Y о %H:%M')}\n"
         f"«{text}»\n"
         f"id: {reminder_id}"
@@ -234,7 +234,7 @@ async def list_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     chat_reminders = data.get(str(chat_id), {})
 
     if not chat_reminders:
-        await update.message.reply_text("Активних нагадувань немає.")
+        await update.effective_message.reply_text("Активних нагадувань немає.")
         return
 
     items = sorted(chat_reminders.items(), key=lambda kv: kv[1]["run_at"])
@@ -244,12 +244,12 @@ async def list_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         lines.append(f"• [{rid}] {when.strftime('%d.%m %H:%M')} — {info['text']}")
     lines.append("\nСкасувати: /cancel <id>")
 
-    await update.message.reply_text("\n".join(lines))
+    await update.effective_message.reply_text("\n".join(lines))
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not context.args:
-        await update.message.reply_text("Вкажіть id нагадування: /cancel <id>")
+        await update.effective_message.reply_text("Вкажіть id нагадування: /cancel <id>")
         return
 
     reminder_id = context.args[0]
@@ -258,7 +258,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     data = load_reminders()
     if chat_key not in data or reminder_id not in data[chat_key]:
-        await update.message.reply_text("Нагадування з таким id не знайдено.")
+        await update.effective_message.reply_text("Нагадування з таким id не знайдено.")
         return
 
     del data[chat_key][reminder_id]
@@ -270,7 +270,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     for job in current_jobs:
         job.schedule_removal()
 
-    await update.message.reply_text("Нагадування скасовано.")
+    await update.effective_message.reply_text("Нагадування скасовано.")
 
 
 # ---------------------------------------------------------------------------
