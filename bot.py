@@ -181,6 +181,12 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.info(
+        "REMIND отримано: chat_id=%s chat_type=%s chat_title=%s",
+        update.effective_chat.id,
+        update.effective_chat.type,
+        update.effective_chat.title,
+    )
     if not context.args:
         await update.effective_message.reply_text(
             "Вкажіть час і текст, наприклад:\n/remind 10m Купити молоко"
