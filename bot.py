@@ -346,12 +346,15 @@ def main() -> None:
 
     app = Application.builder().token(token).post_init(post_init).build()
 
+    # CommandHandler за замовчуванням не обробляє пости каналів — вмикаємо це явно.
+    channel_and_messages = filters.UpdateType.MESSAGES | filters.UpdateType.CHANNEL_POSTS
+
     app.add_handler(MessageHandler(filters.ALL, log_any_update), group=-1)
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("remind", remind))
-    app.add_handler(CommandHandler("list", list_reminders))
-    app.add_handler(CommandHandler("cancel", cancel))
+    app.add_handler(CommandHandler("start", start, filters=channel_and_messages))
+    app.add_handler(CommandHandler("help", help_command, filters=channel_and_messages))
+    app.add_handler(CommandHandler("remind", remind, filters=channel_and_messages))
+    app.add_handler(CommandHandler("list", list_reminders, filters=channel_and_messages))
+    app.add_handler(CommandHandler("cancel", cancel, filters=channel_and_messages))
 
     logger.info("Бот запущено.")
     app.run_polling()
