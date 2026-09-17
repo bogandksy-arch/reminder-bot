@@ -29,6 +29,7 @@ import re
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from telegram import Update
 from telegram.ext import (
@@ -46,6 +47,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 DATA_FILE = Path(__file__).parent / "reminders.json"
+TZ = ZoneInfo("Europe/Kyiv")
 
 # ---------------------------------------------------------------------------
 # Зберігання нагадувань у простому JSON-файлі
@@ -107,7 +109,9 @@ def parse_when(token_time: str, token_date_time: str | None, now: datetime):
             day, month, year, hour, minute = m.groups()
             year = int(year) if year else now.year
             try:
-                candidate = datetime(year, int(month), int(day), int(hour), int(minute))
+                candidate = datetime(
+                    year, int(month), int(day), int(hour), int(minute), tzinfo=TZ
+                )
             except ValueError:
                 return None, 0
             if candidate <= now and not m.group(3):
@@ -213,7 +217,7 @@ async def remind(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
         return
 
-    now = datetime.now()
+    now = datetime.now(TZ)
     args = context.args
     token_time = args[0]
     token_second = args[1] if len(args) > 1 else None
@@ -305,7 +309,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def reschedule_all(app: Application) -> None:
     data = load_reminders()
-    now = datetime.now()
+    now = datetime.now(TZ)
     changed = False
 
     for chat_key, reminders in list(data.items()):
